@@ -1,18 +1,13 @@
-/**
- * Welcome to Cloudflare Workers! This is your first worker.
- *
- * - Run `npm run dev` in your terminal to start a development server
- * - Open a browser tab at http://localhost:8787/ to see your worker in action
- * - Run `npm run deploy` to publish your worker
- *
- * Bind resources to your worker in `wrangler.jsonc`. After adding bindings, a type definition for the
- * `Env` object can be regenerated with `npm run cf-typegen`.
- *
- * Learn more at https://developers.cloudflare.com/workers/
- */
+import { AutoRouter } from "itty-router";
 
-export default {
-	async fetch(request, env, ctx): Promise<Response> {
-		return new Response("Hello World!");
-	},
-} satisfies ExportedHandler<Env>;
+import { handle_login } from "./login";
+import { handle_callback } from "./callback";
+import { handle_frontend } from "./frontend";
+
+const router = AutoRouter();
+
+router.get("/login/:provider", handle_login)
+    .get("/callback/:provider", handle_callback)
+    .get("/", handle_frontend);
+
+export default router;
