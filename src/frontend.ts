@@ -2,16 +2,24 @@ export const handle_frontend = async () => new Response(`
         <html>
             <head>
               <script>
-                  const hide_providers = () => {
-                     document.addEventListener("DOMContentLoaded", () => {
-                         document.getElementById("providers").style.display = "none";
-                         document.getElementById("logout").style.display = "block";
-                     });
-                  }
-
-                  // if ui state cookie set, hide providers and show logout
                   if (document.cookie.includes("sso_logged_in=true")) {
-                      hide_providers();
+                      // if ui state cookie set, hide providers and show logout as well as fetching user details to show in logout button
+                      const user_promise = fetch("/me").then(res => res.json());
+
+                      document.addEventListener("DOMContentLoaded", () => {
+                         document.getElementById("providers").style.display = "none";
+
+                         const logout_btn = document.getElementById("logout");
+                         logout_btn.style.display = "block";
+
+                         user_promise.then(data => {
+                             let button_text = \`Log out from \${data.user.username}\`;
+                             if (data.user.discriminator && data.user.discriminator !== "0") {
+                                 button_text += \`#\${data.user.discriminator}\`;
+                             }
+                             logout_btn.innerText = button_text;
+                         });
+                     });
                   }
               </script>
             </head>
@@ -27,6 +35,6 @@ export const handle_frontend = async () => new Response(`
         </html>
     `,
     {
-        headers: { 'Content-Type': 'text/html' }
+        headers: { "Content-Type": "text/html" }
     }
 );
