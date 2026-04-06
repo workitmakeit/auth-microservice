@@ -1,5 +1,4 @@
-export const handle_frontend = async (request: Request) => {
-    return new Response(`
+export const handle_frontend = async () => new Response(`
         <html>
             <head>
               <script>
@@ -10,27 +9,10 @@ export const handle_frontend = async (request: Request) => {
                      });
                   }
 
-                  // if token in url params, store in localStorage and remove from url
-                  const url_params = new URLSearchParams(window.location.search);
-                  const token = url_params.get("token");
-                  if (token) {
-                      localStorage.setItem("token", token);
-                      url_params.delete("token");
-                      const new_url = window.location.pathname + "?" + url_params.toString();
-                      window.history.replaceState({}, "", new_url);
-
+                  // if ui state cookie set, hide providers and show logout
+                  if (document.cookie.includes("sso_logged_in=true")) {
                       hide_providers();
                   }
-
-                  // if token already in localStorage, show logout button and hide providers
-                  if (localStorage.getItem("token")) {
-                      hide_providers();
-                  }
-
-                  const logout = () => {
-                      localStorage.removeItem("token");
-                      window.location.reload();
-                  };
               </script>
             </head>
             <body>
@@ -40,10 +22,11 @@ export const handle_frontend = async (request: Request) => {
                   <a href="/login/discord">Login with Discord</a><br>
                 </div>
 
-                <button id="logout" style="display: none" onclick="logout()">Logout</button>
+                <a id="logout" style="display: none" href="/logout">Logout</a>
             </body>
         </html>
-    `, {
-        headers: { "Content-Type": "text/html" }
-    });
-}
+    `,
+    {
+        headers: { 'Content-Type': 'text/html' }
+    }
+);

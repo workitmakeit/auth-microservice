@@ -2,6 +2,7 @@ import { parseCookie, serialize } from "cookie";
 import { SignJWT } from "jose";
 
 import { get_provider, get_user_info } from "./providers";
+import { validate_origin } from "./util";
 
 export const handle_callback = async (request: Request & {params: {provider: string}}, env: Env) => {
     const { provider } = request.params;
@@ -54,29 +55,7 @@ export const handle_callback = async (request: Request & {params: {provider: str
 
         // only redirect to authorised origins
         const target_origin = new URL(state_data.from || env.BASE_URL).origin;
-
-        // extract origin from cookie domain (which may start with a dot for subdomain wildcarding)
-        let cookie_origin: string;
-        let is_wildcard = false;
-        if (env.COOKIE_DOMAIN.startsWith(".")) {
-            cookie_origin = `https://${env.COOKIE_DOMAIN.substring(1)}`;
-            is_wildcard = true;
-        } else {
-            cookie_origin = `https://${env.COOKIE_DOMAIN}`;
-        }
-
-        // check if allowed, by either being an exact match or a subdomain if wildcarding is enabled
-        // or is in the EXTRA_REDIRECT_ORIGINS list in env
-        let pass_token_via_url = false;
-        let is_allowed = false;
-        if (target_origin === cookie_origin) {
-            is_allowed = true;
-        } else if (is_wildcard && target_origin.endsWith(`.${cookie_origin.substring(8)}`)) {
-            is_allowed = true;
-        } else if (env.EXTRA_REDIRECT_ORIGINS.split(",").map(s => s.trim()).includes(target_origin)) {
-            is_allowed = true;
-            pass_token_via_url = true;
-        }
+        const { is_allowed, pass_token_via_url } = validate_origin(target_origin, env);
 
         const final_redirect = is_allowed ? state_data.from : env.BASE_URL;
 
@@ -103,6 +82,16 @@ export const handle_callback = async (request: Request & {params: {provider: str
             path: "/"
         });
 
+        // also persist ui state cookie
+        const sso_ui_cookie = serialize("sso_logged_in", "true", {
+            domain: env.COOKIE_DOMAIN,
+            httpOnly: false,
+            secure: true,
+            sameSite: "lax",
+            maxAge: 60 * 60 * 24 * 30, // 30 days
+            path: "/"
+        });
+
         const res = new Response(null, {
             status: 302,
             headers: {
@@ -112,6 +101,7 @@ export const handle_callback = async (request: Request & {params: {provider: str
 
         res.headers.append("Set-Cookie", delete_auth_cookie);
         res.headers.append("Set-Cookie", sso_cookie);
+        res.headers.append("Set-Cookie", sso_ui_cookie);
 
         return res;
     } catch (e) {
