@@ -2,6 +2,9 @@ import { Discord } from "arctic";
 
 export type Provider = Discord;
 
+export const provider_names = ["discord"] as const;
+export type ProviderNames = typeof provider_names[number];
+
 export const get_provider = (provider: string, env: Env): Provider | null => {
     const redirect_uri = new URL(`/callback/${provider}`, env.BASE_URL).toString();
 
@@ -62,4 +65,10 @@ export const get_user_info = async (provider: string, access_token: string): Pro
         default:
             throw new Error(`Unsupported provider: ${provider}`);
     }
+};
+
+export const handle_provider_names = async (request: Request, env: Env) => {
+    return new Response(JSON.stringify({ providers: provider_names }), {
+        headers: { "Content-Type": "application/json" }
+    });
 };

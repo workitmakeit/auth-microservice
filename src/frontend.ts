@@ -40,3 +40,4 @@ export const handle_frontend = async () => new Response(`
 );
 
 // TODO: make this way prettier, maybe serve a little prebuilt react app or serve from github pages
+// TODO: use providers list to dynamically generate login options instead of hardcoding in HTML
