@@ -13,7 +13,9 @@ import { handle_provider_names, provider_names, type ProviderNames } from './pro
 
 const router = AutoRouter();
 
-router.get("/login/:provider", handle_login)
+router
+    .get("/login", handle_login)
+    .get("/login/:provider", handle_login)
     .get("/callback/:provider", handle_callback)
     .get("/logout", handle_logout)
     .get("/me", handle_me)

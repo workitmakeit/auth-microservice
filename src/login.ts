@@ -1,12 +1,42 @@
 import { generateCodeVerifier, generateState } from "arctic";
-import { serialize } from "cookie";
+import { parseCookie, serialize } from "cookie";
 
 import { get_provider, get_scopes } from "./providers";
+import { validate_origin, verify_token } from "./util";
 
 export const handle_login = async (request: Request & {params: {provider: string}}, env: Env) => {
     const { provider } = request.params;
 
     const from = new URL(request.url).searchParams.get("from") || env.BASE_URL;
+
+    // check for existing login session
+    const cookies = parseCookie(request.headers.get("Cookie") || "");
+    const existing_token = cookies["sso_token"];
+
+    if (existing_token) {
+        const session = await verify_token(existing_token, env);
+
+        // if the session is valid and either we don't care about provider or it matches
+        if (session.valid && (!provider || session.payload.sub?.startsWith(provider))) {
+            const { is_allowed, pass_token_via_url } = validate_origin(new URL(from).origin, env);
+
+            if (is_allowed) {
+                const redirect_url = new URL(from);
+
+                if (pass_token_via_url) {
+                    redirect_url.searchParams.set("token", existing_token);
+                }
+
+                return Response.redirect(redirect_url.toString(), 302);
+            }
+        }
+    }
+
+    // if at this point provider is undefined, redirect to base url (which has uri to choose provider)
+    // TODO: or should that ui be on /login when provider not specified, and root redirects here (its just for vanity)
+    if (!provider) {
+        return Response.redirect(env.BASE_URL, 302);
+    }
 
     const oauth = get_provider(provider, env);
     if (!oauth) {
