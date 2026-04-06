@@ -1,5 +1,6 @@
-import { jwtVerify } from "jose";
 import { parseCookie } from "cookie";
+
+import { verify_token } from "./util";
 
 export const handle_me = async (request: Request, env: Env) => {
     // extract token from cookie (or Authorization header for API access)
@@ -15,11 +16,9 @@ export const handle_me = async (request: Request, env: Env) => {
         });
     }
 
-    try {
-        const { payload } = await jwtVerify(
-            token,
-            new TextEncoder().encode(env.JWT_SECRET)
-        );
+    const verification = await verify_token(token, env);
+    if (verification.valid) {
+        const { payload } = verification;
 
         // TODO: refresh D1 data
 
@@ -35,7 +34,7 @@ export const handle_me = async (request: Request, env: Env) => {
         }), {
             headers: { "Content-Type": "application/json" }
         });
-    } catch (e) {
+    } else {
         return new Response(JSON.stringify({ authenticated: false, error: "Invalid session" }), {
             status: 401
         });

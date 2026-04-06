@@ -38,3 +38,5 @@ export const handle_frontend = async () => new Response(`
         headers: { "Content-Type": "text/html" }
     }
 );
+
+// TODO: make this way prettier, maybe serve a little prebuilt react app or serve from github pages
