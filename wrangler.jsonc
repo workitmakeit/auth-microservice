@@ -31,7 +31,7 @@
 	 * Note: Use secrets to store sensitive data.
 	 * https://developers.cloudflare.com/workers/configuration/secrets/
 	 */
-	"vars": {  "BASE_URL": "https://auth.ollieg.codes" }
+	"vars": {  "BASE_URL": "https://auth.ollieg.codes", "COOKIE_DOMAIN": ".ollieg.codes", "EXTRA_REDIRECT_ORIGINS": "https://rangle.today" }
 	/**
 	 * Static Assets
 	 * https://developers.cloudflare.com/workers/static-assets/binding/
