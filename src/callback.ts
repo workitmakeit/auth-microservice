@@ -39,7 +39,6 @@ export const handle_callback = async (request: Request & {params: {provider: str
         const user_info = await get_user_info(provider, tokens.accessToken());
 
         // TODO: persist to D1
-        // TODO: persist to cookie to share SSO-style
 
         // convert to jwt
         const jwt = await new SignJWT({
@@ -55,25 +54,66 @@ export const handle_callback = async (request: Request & {params: {provider: str
 
         // only redirect to authorised origins
         const target_origin = new URL(state_data.from || env.BASE_URL).origin;
-        const allowed_origins = env.ALLOWED_REDIRECT_ORIGINS.split(",").map(s => s.trim()).filter(s => s.length > 0);
 
-        const is_allowed = allowed_origins.includes(target_origin);
+        // extract origin from cookie domain (which may start with a dot for subdomain wildcarding)
+        let cookie_origin: string;
+        let is_wildcard = false;
+        if (env.COOKIE_DOMAIN.startsWith(".")) {
+            cookie_origin = `https://${env.COOKIE_DOMAIN.substring(1)}`;
+            is_wildcard = true;
+        } else {
+            cookie_origin = `https://${env.COOKIE_DOMAIN}`;
+        }
+
+        // check if allowed, by either being an exact match or a subdomain if wildcarding is enabled
+        // or is in the EXTRA_REDIRECT_ORIGINS list in env
+        let pass_token_via_url = false;
+        let is_allowed = false;
+        if (target_origin === cookie_origin) {
+            is_allowed = true;
+        } else if (is_wildcard && target_origin.endsWith(`.${cookie_origin.substring(8)}`)) {
+            is_allowed = true;
+        } else if (env.EXTRA_REDIRECT_ORIGINS.split(",").map(s => s.trim()).includes(target_origin)) {
+            is_allowed = true;
+            pass_token_via_url = true;
+        }
+
         const final_redirect = is_allowed ? state_data.from : env.BASE_URL;
 
         const redirect_url = new URL(final_redirect);
-        redirect_url.searchParams.set("token", jwt);
 
-        // redirect back to frontend with token in query params
-        return new Response(null, {
+        if (pass_token_via_url) {
+            redirect_url.searchParams.set("token", jwt);
+        }
+
+        // delete temporary auth_state cookie
+        const delete_auth_cookie = serialize("auth_state", "", {
+            maxAge: 0,
+            path: "/",
+            expires: new Date(0)
+        });
+
+        // persist to sso cookie
+        const sso_cookie = serialize("sso_token", jwt, {
+            domain: env.COOKIE_DOMAIN,
+            httpOnly: true,
+            secure: true,
+            sameSite: "lax",
+            maxAge: 60 * 60 * 24 * 30, // 30 days
+            path: "/"
+        });
+
+        const res = new Response(null, {
             status: 302,
             headers: {
                 "Location": redirect_url.toString(),
-
-                // delete the temporary auth_state cookie
-                "Set-Cookie": serialize("auth_state", "", { maxAge: 0, path: "/", expires: new Date(0) })
             }
         });
 
+        res.headers.append("Set-Cookie", delete_auth_cookie);
+        res.headers.append("Set-Cookie", sso_cookie);
+
+        return res;
     } catch (e) {
         console.error(e);
         return new Response("Authentication failed during token exchange", { status: 500 });

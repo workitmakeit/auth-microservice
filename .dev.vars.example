@@ -1,7 +1,9 @@
 BASE_URL=http://127.0.0.1:8787
 JWT_SECRET=
 
-ALLOWED_REDIRECT_ORIGINS=https://ollieg.codes,http://127.0.0.1:8787
+# redirects are always allowed to the cookie domain. extra legal redirect origins can be specified, in which it is passed via the ?token uri parameter
+COOKIE_DOMAIN=.ollieg.codes # omit for localhost
+EXTRA_REDIRECT_ORIGINS=http://127.0.0.1:8787
 
 DISCORD_CLIENT_ID=
 DISCORD_CLIENT_SECRET=
