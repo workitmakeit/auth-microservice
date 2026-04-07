@@ -1,6 +1,6 @@
 import { WorkerEntrypoint } from "cloudflare:workers";
 
-import { AutoRouter } from "itty-router";
+import { AutoRouter, createCors } from "itty-router";
 
 import { handle_login } from "./login";
 import { handle_callback } from "./callback";
@@ -12,6 +12,13 @@ import { verify_token } from "./util";
 import { handle_provider_names, provider_names, type ProviderNames } from './providers';
 
 const router = AutoRouter();
+
+const { preflight } = createCors({
+    origins: ["*"], // TODO: restrict to allowed origins
+    methods: ["GET"],
+});
+
+router.all("*", preflight);
 
 router
     .get("/login", handle_login)
