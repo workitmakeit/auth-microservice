@@ -32,7 +32,15 @@ export const handle_me = async (request: Request, env: Env) => {
                 avatar: payload.avatar
             }
         }), {
-            headers: { "Content-Type": "application/json" }
+            headers: {
+                "Content-Type": "application/json",
+                "Cache-Control": "no-store",
+                "Pragma": "no-cache",
+                "Expires": "0",
+                "Access-Control-Allow-Origin": "*", // TODO: should this be restricted to allowed origins?
+                "Access-Control-Allow-Methods": "GET",
+                "Access-Control-Allow-Headers": "Authorization, Content-Type"
+            }
         });
     } else {
         return new Response(JSON.stringify({ authenticated: false, error: "Invalid session" }), {

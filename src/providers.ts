@@ -69,6 +69,11 @@ export const get_user_info = async (provider: string, access_token: string): Pro
 
 export const handle_provider_names = async (request: Request, env: Env) => {
     return new Response(JSON.stringify({ providers: provider_names }), {
-        headers: { "Content-Type": "application/json" }
+        headers: {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*", // TODO: should this be restricted to allowed origins?
+            "Access-Control-Allow-Methods": "GET",
+            "Access-Control-Allow-Headers": "Authorization, Content-Type"
+        }
     });
 };
