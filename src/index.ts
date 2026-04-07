@@ -39,3 +39,5 @@ export default class AuthService extends WorkerEntrypoint<Env> {
 
     // TODO: get details from D1 when implemented
 }
+
+// TODO: allow localhost redirect, but show a warning first
