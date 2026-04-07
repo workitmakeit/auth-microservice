@@ -60,7 +60,7 @@ export const get_user_info = async (provider: string, access_token: string): Pro
                 username: data.username,
                 discriminator: data.discriminator,
                 email: data.email,
-                avatar: data.avatar
+                avatar: `https://cdn.discordapp.com/avatars/${data.id}/${data.avatar}.png`
             };
         default:
             throw new Error(`Unsupported provider: ${provider}`);
