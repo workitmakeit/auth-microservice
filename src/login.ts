@@ -35,7 +35,13 @@ export const handle_login = async (request: Request & {params: {provider: string
     // if at this point provider is undefined, redirect to base url (which has uri to choose provider)
     // TODO: or should that ui be on /login when provider not specified, and root redirects here (its just for vanity)
     if (!provider) {
-        return Response.redirect(env.BASE_URL, 302);
+        // be sure to preserve the from param if present
+        const redirect_url = new URL(env.BASE_URL);
+        if (from) {
+            redirect_url.searchParams.set("from", from);
+        }
+
+        return Response.redirect(redirect_url.toString(), 302);
     }
 
     const oauth = get_provider(provider, env);
