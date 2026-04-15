@@ -63,7 +63,7 @@ export const handle_frontend = async () => new Response(`
             </head>
             <body class="bg-background text-foreground flex flex-col items-center justify-center h-screen">
                 <div class="bg-background-variant/80 backdrop-blur-md border border-foreground/20 p-8 rounded-xl shadow-lg flex flex-col items-center gap-4">
-                    <h1 class="font-bold text-2xl mb-8">Log in to ollieg.codes</h1>
+                    <h1 class="font-bold text-2xl mb-8">ollieg.codes Account</h1>
 
                     <div id="providers">
                       <a href="/login/discord" class="link-from">
