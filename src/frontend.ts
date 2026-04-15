@@ -27,11 +27,25 @@ export const handle_frontend = async () => new Response(`
                 <h1>Login</h1>
 
                 <div id="providers">
-                  <a href="/login/discord">Login with Discord</a><br>
+                  <a href="/login/discord" class="link-from">Login with Discord</a><br>
                 </div>
 
-                <a id="logout" style="display: none" href="/logout">Logout</a>
+                <a id="logout" style="display: none" href="/logout" class="link-from">Logout</a>
             </body>
+
+            <script>
+                // if there is a from param in the url, append it to the links
+                document.addEventListener("DOMContentLoaded", () => {
+                    const url_params = new URLSearchParams(window.location.search);
+                    const from = url_params.get("from");
+
+                    if (from) {
+                        document.querySelectorAll(".link-from").forEach(link => {
+                            link.href += \`?from=\${encodeURIComponent(from)}\`;
+                        });
+                    }
+                });
+            </script>
         </html>
     `,
     {
