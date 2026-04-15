@@ -9,7 +9,7 @@ import { handle_logout } from "./logout";
 import { handle_me } from "./me";
 
 import { verify_token } from "./util";
-import { handle_provider_names, provider_names, type ProviderNames } from './providers';
+import { handle_provider_names, provider_friendly_names, provider_names, type ProviderName } from './providers';
 
 const { preflight } = cors({
     origin: "*", // TODO: restrict to allowed origins
@@ -41,8 +41,12 @@ export default class AuthService extends WorkerEntrypoint<Env> {
         return verify_token(token, this.env);
     }
 
-    get_provider_names(): readonly ProviderNames[] {
+    get_provider_names(): readonly ProviderName[] {
         return provider_names;
+    }
+
+    get_provider_friendly_names(): Record<ProviderName, string> {
+        return provider_friendly_names;
     }
 
     // TODO: get details from D1 when implemented

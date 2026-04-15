@@ -24,6 +24,7 @@ export const handle_me = async (request: Request, env: Env) => {
 
         return new Response(JSON.stringify({
             authenticated: true,
+            provider: payload.provider,
             user: {
                 id: payload.sub,
                 username: payload.username,

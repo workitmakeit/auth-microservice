@@ -3,7 +3,7 @@ import { Discord } from "arctic";
 export type Provider = Discord;
 
 export const provider_names = ["discord"] as const;
-export type ProviderNames = typeof provider_names[number];
+export type ProviderName = typeof provider_names[number];
 
 export const get_provider = (provider: string, env: Env): Provider | null => {
     const redirect_uri = new URL(`/callback/${provider}`, env.BASE_URL).toString();
@@ -76,4 +76,8 @@ export const handle_provider_names = async (request: Request, env: Env) => {
             "Access-Control-Allow-Headers": "Authorization, Content-Type"
         }
     });
+};
+
+export const provider_friendly_names: Record<ProviderName, string> = {
+    discord: "Discord"
 };

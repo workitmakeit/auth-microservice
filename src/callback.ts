@@ -1,7 +1,7 @@
 import { parseCookie, serialize } from "cookie";
 import { SignJWT } from "jose";
 
-import { get_provider, get_user_info } from "./providers";
+import { get_provider, get_user_info, provider_friendly_names, ProviderName } from './providers';
 import { validate_origin } from "./util";
 
 export const handle_callback = async (request: Request & {params: {provider: string}}, env: Env) => {
@@ -43,6 +43,7 @@ export const handle_callback = async (request: Request & {params: {provider: str
 
         // convert to jwt
         const jwt = await new SignJWT({
+            provider: provider_friendly_names[provider as ProviderName],
             sub: `${provider}:${user_info.id}`,
             username: user_info.username,
             discriminator: user_info.discriminator,

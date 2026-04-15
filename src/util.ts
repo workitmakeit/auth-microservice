@@ -1,4 +1,4 @@
-import { JWTPayload, jwtVerify } from 'jose';
+import { JWTPayload, jwtVerify } from "jose";
 
 export const validate_origin = (target_origin: string, env: Env) => {
     // extract origin from cookie domain (which may start with a dot for subdomain wildcarding)
@@ -30,7 +30,9 @@ export const validate_origin = (target_origin: string, env: Env) => {
     }
 }
 
-export const verify_token = async (token: string, env: Env): Promise<{ valid: true; payload: JWTPayload } | { valid: false }> => {
+export type JWTPayloadWithProvider = JWTPayload & { provider: string };
+
+export const verify_token = async (token: string, env: Env): Promise<{ valid: true; payload: JWTPayloadWithProvider } | { valid: false }> => {
     try {
         const { payload } = await jwtVerify(
             token,
@@ -39,7 +41,7 @@ export const verify_token = async (token: string, env: Env): Promise<{ valid: tr
 
         return {
             valid: true,
-            payload
+            payload: payload as JWTPayloadWithProvider
         };
     } catch (e) {
         return {
