@@ -5,7 +5,7 @@ import { validate_origin, verify_token } from './util';
 import { provider_names, provider_friendly_names } from "./providers";
 
 export const handle_frontend = async (request: IRequest, env: Env) => {
-    const from = request.params.from || env.BASE_URL;
+    const from = request.query.from || env.BASE_URL;
 
     // if the from is not allowed, stop here
     if (!validate_origin(new URL(from).origin, env).is_allowed) {
@@ -94,7 +94,8 @@ export const handle_frontend = async (request: IRequest, env: Env) => {
                 "Content-Type": "text/html",
 
                 // allow iframing only in the authorised origin
-                "Content-Security-Policy": `frame-ancestors ${from};`
+                "Content-Security-Policy": `frame-ancestors ${from};`,
+                "X-Frame-Options": `ALLOW-FROM ${from}`
             }
         }
     );
