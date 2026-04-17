@@ -79,7 +79,7 @@ export const handle_frontend = async (request: IRequest, env: Env) => {
                     <div id="providers" class="flex flex-col items-stretch gap-4">
                         ${provider_names.map((provider) => {
                             const friendly_name = provider_friendly_names[provider] || provider;
-                            return `<a href="/login/${provider}?from=${from}" class="link"><img src="https://cdn.simpleicons.org/${provider}/ffffff" class="icon" />Log in with ${friendly_name}</a>`;
+                            return `<a target="_parent" href="/login/${provider}?from=${from}" class="link"><img src="https://cdn.simpleicons.org/${provider}/ffffff" class="icon" />Log in with ${friendly_name}</a>`;
                         }).join("")}
                     </div>
 
