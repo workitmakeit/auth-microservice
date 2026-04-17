@@ -1,34 +1,39 @@
-export const handle_frontend = async () => new Response(`
+import type { IRequest } from "itty-router";
+import { parseCookie } from "cookie";
+
+import { verify_token } from "./util";
+import { provider_names, provider_friendly_names } from "./providers";
+
+export const handle_frontend = async (request: IRequest, env: Env) => {
+    const from = request.params.from || "https://auth.ollieg.codes";
+    const cookies = parseCookie(request.headers.get("Cookie") || "");
+
+    let show_logout = false;
+
+    let provider: string | null = null;
+    let username_with_discrim: string | null = null;
+
+    if (cookies["sso_token"]) {
+        const verification = await verify_token(cookies["sso_token"], env);
+
+        if (verification.valid) {
+            const { payload } = verification;
+
+            show_logout = true;
+
+            provider = payload.provider;
+
+            username_with_discrim = payload.username as string;
+            if (payload.discriminator && payload.discriminator !== "0") {
+                username_with_discrim += `#${payload.discriminator}`;
+            }
+        }
+    }
+
+    return new Response(`
         <html>
             <head>
               <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-              <script>
-                  if (document.cookie.includes("sso_logged_in=true")) {
-                      // if ui state cookie set, hide providers and show logout as well as fetching user details to show in logout button
-                      const user_promise = fetch("/me").then(res => res.json());
-
-                      document.addEventListener("DOMContentLoaded", () => {
-                         document.getElementById("providers").style.display = "none";
-
-                         const logout_btn = document.getElementById("logout");
-                         logout_btn.style.display = "block";
-
-                         const provider_el = document.getElementById("provider");
-                         provider_el.style.display = "block";
-
-                         user_promise.then(data => {
-                             let button_text = \`Log out from \${data.user.username}\`;
-                             if (data.user.discriminator && data.user.discriminator !== "0") {
-                                 button_text += \`#\${data.user.discriminator}\`;
-                             }
-                             logout_btn.innerText = button_text;
-
-                             provider_el.innerText =  \`Logged in with \${data.provider}\`;
-                         });
-                     });
-                  }
-              </script>
 
               <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
               <style type="text/tailwindcss">
@@ -48,7 +53,7 @@ export const handle_frontend = async () => new Response(`
                       }
                   }
 
-                  .link-from {
+                  .link {
                       @apply bg-primary text-on-primary p-4 rounded-xl flex items-center gap-4 transition-transform transform hover:scale-[1.02] active:scale-[0.98];
                   }
 
@@ -66,36 +71,22 @@ export const handle_frontend = async () => new Response(`
                     <h1 class="font-bold text-2xl mb-8">ollieg.codes Account</h1>
 
                     <div id="providers">
-                      <a href="/login/discord" class="link-from">
-                         <img src="https://cdn.simpleicons.org/discord/ffffff" class="icon" />
-                         Log in with Discord
-                      </a>
+                        ${provider_names.map((provider) => {
+                            const friendly_name = provider_friendly_names[provider] || provider;
+                            return `<a href="/login/${provider}?from=${from}" class="link"><img src="https://cdn.simpleicons.org/${provider}/ffffff" class="icon" />Log in with ${friendly_name}</a>`;
+                        }).join("")}
                     </div>
 
-                    <p id="provider" style="display: none"></p>
-                    <a id="logout" style="display: none" href="/logout" class="link-from">Logout</a>
+                    ${provider ? `<p id="provider" style="display: none" class="text-sm text-foreground/70">Logged in with ${provider}</p>` : ''}
+                    ${show_logout ? `<a id="logout" style="display: none" href="/logout?from=${from}" class="link">Log out from ${username_with_discrim}</a>` : ''}
                 </div>
             </body>
-
-            <script>
-                // if there is a from param in the url, append it to the links
-                document.addEventListener("DOMContentLoaded", () => {
-                    const url_params = new URLSearchParams(window.location.search);
-                    const from = url_params.get("from");
-
-                    if (from) {
-                        document.querySelectorAll(".link-from").forEach(link => {
-                            link.href += \`?from=\${encodeURIComponent(from)}\`;
-                        });
-                    }
-                });
-            </script>
         </html>
     `,
-    {
-        headers: { "Content-Type": "text/html" }
-    }
-);
+        {
+            headers: { "Content-Type": "text/html" }
+        }
+    );
+}
 
 // TODO: maybe serve a little prebuilt react app or serve from github pages? this works for now though, just uses a request!
-// TODO: use providers list to dynamically generate login options instead of hardcoding in HTML
