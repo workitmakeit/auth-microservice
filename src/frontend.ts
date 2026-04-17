@@ -70,7 +70,7 @@ export const handle_frontend = async (request: IRequest, env: Env) => {
                 <div class="bg-background-variant/80 backdrop-blur-md border border-foreground/20 p-8 rounded-xl shadow-lg flex flex-col items-center gap-4">
                     <h1 class="font-bold text-2xl mb-8">ollieg.codes Account</h1>
 
-                    <div id="providers">
+                    <div id="providers" class="flex flex-col items-stretch gap-4">
                         ${provider_names.map((provider) => {
                             const friendly_name = provider_friendly_names[provider] || provider;
                             return `<a href="/login/${provider}?from=${from}" class="link"><img src="https://cdn.simpleicons.org/${provider}/ffffff" class="icon" />Log in with ${friendly_name}</a>`;
