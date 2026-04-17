@@ -1,6 +1,14 @@
 import { JWTPayload, jwtVerify } from "jose";
 
 export const validate_origin = (target_origin: string, env: Env) => {
+    // base url is always allowed
+    if (target_origin === new URL(env.BASE_URL).origin) {
+        return {
+            is_allowed: true,
+            pass_token_via_url: false
+        };
+    }
+
     // extract origin from cookie domain (which may start with a dot for subdomain wildcarding)
     let cookie_origin: string;
     let is_wildcard = false;

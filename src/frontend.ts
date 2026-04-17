@@ -1,11 +1,17 @@
 import type { IRequest } from "itty-router";
 import { parseCookie } from "cookie";
 
-import { verify_token } from "./util";
+import { validate_origin, verify_token } from './util';
 import { provider_names, provider_friendly_names } from "./providers";
 
 export const handle_frontend = async (request: IRequest, env: Env) => {
-    const from = request.params.from || "https://auth.ollieg.codes";
+    const from = request.params.from || env.BASE_URL;
+
+    // if the from is not allowed, stop here
+    if (!validate_origin(new URL(from).origin, env).is_allowed) {
+        return new Response("Unauthorised from origin", { status: 403 });
+    }
+
     const cookies = parseCookie(request.headers.get("Cookie") || "");
 
     let show_logout = false;
@@ -84,7 +90,12 @@ export const handle_frontend = async (request: IRequest, env: Env) => {
         </html>
     `,
         {
-            headers: { "Content-Type": "text/html" }
+            headers: {
+                "Content-Type": "text/html",
+
+                // allow iframing only in the authorised origin
+                "Content-Security-Policy": `frame-ancestors ${from};`
+            }
         }
     );
 }
