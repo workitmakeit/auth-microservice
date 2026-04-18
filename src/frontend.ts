@@ -76,15 +76,17 @@ export const handle_frontend = async (request: IRequest, env: Env) => {
                 <div class="bg-background-variant/80 backdrop-blur-md border border-foreground/20 p-8 rounded-xl shadow-lg flex flex-col items-center gap-4">
                     <h1 class="font-bold text-2xl mb-8">ollieg.codes Account</h1>
 
-                    <div id="providers" class="flex flex-col items-stretch gap-4">
-                        ${provider_names.map((provider) => {
-                            const friendly_name = provider_friendly_names[provider] || provider;
-                            return `<a target="_parent" href="/login/${provider}?from=${from}" class="link"><img src="https://cdn.simpleicons.org/${provider}/ffffff" class="icon" />Log in with ${friendly_name}</a>`;
-                        }).join("")}
-                    </div>
+                    ${!show_logout ?
+                        `<div id="providers" class="flex flex-col items-stretch gap-4">
+                          ${provider_names.map((provider) => {
+                                const friendly_name = provider_friendly_names[provider] || provider;
+                                return `<a target="_parent" href="/login/${provider}?from=${from}" class="link"><img src="https://cdn.simpleicons.org/${provider}/ffffff" class="icon" />Log in with ${friendly_name}</a>`;
+                            }).join("")}
+                      </div>`
+                    : ''}
 
-                    ${provider ? `<p id="provider" style="display: none" class="text-sm text-foreground/70">Logged in with ${provider}</p>` : ''}
-                    ${show_logout ? `<a id="logout" style="display: none" href="/logout?from=${from}" class="link">Log out from ${username_with_discrim}</a>` : ''}
+                    ${provider ? `<p id="provider" class="text-sm text-foreground/70">Logged in with ${provider}</p>` : ''}
+                    ${show_logout ? `<a id="logout" href="/logout?from=${from}" class="link">Log out from ${username_with_discrim}</a>` : ''}
                 </div>
             </body>
         </html>
