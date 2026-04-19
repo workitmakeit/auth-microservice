@@ -72,7 +72,7 @@ export const handle_frontend = async (request: IRequest, env: Env) => {
                   }
               </style>
             </head>
-            <body class="bg-background text-foreground flex flex-col items-center justify-center h-screen [&.is-iframe]:bg-transparent!">
+            <body class="bg-background text-foreground flex flex-col items-center justify-center h-screen [.is-iframe_&]:bg-transparent!">
                 <script>
                   // detect iframe and add class to root element if so, so we can adjust styling accordingly (transparent bg)
                   if (window.self !== window.top) {
