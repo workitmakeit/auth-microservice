@@ -1,7 +1,7 @@
 import type { IRequest } from "itty-router";
 import { parseCookie } from "cookie";
 
-import { validate_origin, verify_token } from './util';
+import { validate_origin, verify_token } from "./util";
 import { provider_names, provider_friendly_names } from "./providers";
 
 export const handle_frontend = async (request: IRequest, env: Env) => {
@@ -90,6 +90,19 @@ export const handle_frontend = async (request: IRequest, env: Env) => {
                     ${show_logout ? `<a id="logout" href="/logout?from=${from}" class="link">Log out from ${username_with_discrim}</a>` : ''}
                 </div>
             </body>
+
+            <script>
+              const send_height = () => {
+                  const height = document.documentElement.offsetHeight;
+
+                  window.parent.postMessage({ type: "iframe-resize", height }, "${new URL(from).origin}");
+              };
+
+              const observer = new ResizeObserver(send_height);
+              observer.observe(document.body);
+
+              window.addEventListener("load", send_height);
+            </script>
         </html>
     `,
         {
