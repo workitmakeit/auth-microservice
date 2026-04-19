@@ -3,13 +3,10 @@ import { SignJWT } from "jose";
 
 import { get_provider, get_user_info, provider_friendly_names, ProviderName } from './providers';
 import { validate_origin } from "./util";
+import { IRequest } from "itty-router";
 
-export const handle_callback = async (request: Request & {params: {provider: string}}, env: Env) => {
-    const { provider } = request.params;
-
-    const url = new URL(request.url);
-    const code = url.searchParams.get("code");
-    const state = url.searchParams.get("state");
+export const handle_callback = async (request: IRequest, env: Env) => {
+    const { provider, code, state } = request.params;
 
     const oauth = get_provider(provider, env);
     if (!oauth) {

@@ -10,3 +10,9 @@ DISCORD_CLIENT_SECRET=
 
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
+
+# discord activities are added dynamically, using the format DISCORD_ACTIVITY_{activity name uppercase}_{variable name uppercase}
+# you need to define each of these for each activity you plan to support, then pass the activity name in the ?activity query parameter when requesting a token to use the right client secret
+#DISCORD_ACTIVITY_RANGLE_REDIRECT_URI=https://rangle.today
+#DISCORD_ACTIVITY_RANGLE_CLIENT_ID=
+#DISCORD_ACTIVITY_RANGLE_CLIENT_SECRET=

@@ -3,11 +3,14 @@ import { parseCookie, serialize } from "cookie";
 
 import { get_provider, get_scopes } from "./providers";
 import { validate_origin, verify_token } from "./util";
+import { IRequest } from 'itty-router';
 
-export const handle_login = async (request: Request & {params: {provider: string}}, env: Env) => {
-    const { provider } = request.params;
+export const handle_login = async (request: IRequest, env: Env) => {
+    let { provider, from } = request.params;
 
-    const from = new URL(request.url).searchParams.get("from") || env.BASE_URL;
+    if (!from) {
+        from = env.BASE_URL;
+    }
 
     // check for existing login session
     const cookies = parseCookie(request.headers.get("Cookie") || "");

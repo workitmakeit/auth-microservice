@@ -10,6 +10,7 @@ import { handle_me } from "./me";
 
 import { verify_token } from "./util";
 import { handle_provider_names, provider_friendly_names, provider_names, type ProviderName } from './providers';
+import { handle_discord_activity_auth } from './discord_activity';
 
 const { preflight } = cors({
     origin: "*", // TODO: restrict to allowed origins
@@ -28,7 +29,8 @@ router
     .get("/logout", handle_logout)
     .get("/me", handle_me)
     .get("/providers", handle_provider_names)
-    .get("/", handle_frontend);
+    .get("/", handle_frontend)
+    .post("/login-discord-activity", handle_discord_activity_auth);
 
 export default class AuthService extends WorkerEntrypoint<Env> {
     async fetch(request: Request): Promise<Response> {
