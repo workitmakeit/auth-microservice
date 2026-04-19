@@ -93,7 +93,7 @@ export const handle_frontend = async (request: IRequest, env: Env) => {
 
             <script>
               const send_height = () => {
-                  const height = document.documentElement.offsetHeight;
+                  const height = document.documentElement.scrollHeight;
 
                   window.parent.postMessage({ type: "iframe-resize", height }, "${new URL(from).origin}");
               };
