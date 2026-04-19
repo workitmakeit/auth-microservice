@@ -1,8 +1,8 @@
-import { Discord } from "arctic";
+import { Discord, Google } from "arctic";
 
-export type Provider = Discord;
+export type Provider = Discord | Google;
 
-export const provider_names = ["discord"] as const;
+export const provider_names = ["discord", "google"] as const;
 export type ProviderName = typeof provider_names[number];
 
 export const get_provider = (provider: string, env: Env): Provider | null => {
@@ -11,6 +11,8 @@ export const get_provider = (provider: string, env: Env): Provider | null => {
     switch (provider) {
         case "discord":
             return new Discord(env.DISCORD_CLIENT_ID, env.DISCORD_CLIENT_SECRET, redirect_uri);
+        case "google":
+            return new Google(env.GOOGLE_CLIENT_ID, env.GOOGLE_CLIENT_SECRET, redirect_uri);
         default:
             return null;
     }
@@ -20,6 +22,8 @@ export const get_scopes = (provider: string): string[] => {
     switch (provider) {
         case "discord":
             return ["identify", "email"];
+        case "google":
+            return ["openid", "email", "profile"];
         default:
             return [];
     }
@@ -36,7 +40,7 @@ interface UserInfo {
 
 export const get_user_info = async (provider: string, access_token: string): Promise<UserInfo> => {
     switch (provider) {
-        case "discord":
+        case "discord": {
             const response = await fetch("https://discord.com/api/users/@me", {
                 headers: {
                     "Authorization": `Bearer ${access_token}`
@@ -62,6 +66,32 @@ export const get_user_info = async (provider: string, access_token: string): Pro
                 email: data.email,
                 avatar: `https://cdn.discordapp.com/avatars/${data.id}/${data.avatar}.png`
             };
+        }
+        case "google": {
+            const response = await fetch("https://openidconnect.googleapis.com/v1/userinfo", {
+                headers: {
+                    Authorization: `Bearer ${access_token}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error("Failed to fetch user info from Google");
+            }
+
+            const data = await response.json() as {
+                sub: string;
+                name: string;
+                email?: string;
+                picture?: string;
+            };
+
+            return {
+                id: data.sub,
+                username: data.name,
+                email: data.email,
+                avatar: data.picture
+            };
+        }
         default:
             throw new Error(`Unsupported provider: ${provider}`);
     }
@@ -79,5 +109,6 @@ export const handle_provider_names = async (request: Request, env: Env) => {
 };
 
 export const provider_friendly_names: Record<ProviderName, string> = {
-    discord: "Discord"
+    discord: "Discord",
+    google: "Google"
 };

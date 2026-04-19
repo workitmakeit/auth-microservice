@@ -5,7 +5,7 @@ import { validate_origin, verify_token } from './util';
 import { provider_names, provider_friendly_names } from "./providers";
 
 export const handle_frontend = async (request: IRequest, env: Env) => {
-    const from = request.query.from || env.BASE_URL;
+    const from = (request.query.from as string) || env.BASE_URL;
 
     // if the from is not allowed, stop here
     if (!validate_origin(new URL(from).origin, env).is_allowed) {
@@ -77,12 +77,13 @@ export const handle_frontend = async (request: IRequest, env: Env) => {
                     <h1 class="font-bold text-2xl mb-8">ollieg.codes Account</h1>
 
                     ${!show_logout ?
-                        `<div id="providers" class="flex flex-col items-stretch gap-4">
+                        `<div id="providers" class="flex flex-col items-stretch gap-4 mb-2">
                           ${provider_names.map((provider) => {
                                 const friendly_name = provider_friendly_names[provider] || provider;
                                 return `<a target="_parent" href="/login/${provider}?from=${from}" class="link"><img src="https://cdn.simpleicons.org/${provider}/ffffff" class="icon" />Log in with ${friendly_name}</a>`;
                             }).join("")}
-                      </div>`
+                      </div>
+                      Your account is tied to the provider you choose.<br/>Make sure to use the same one each time!`
                     : ''}
 
                     ${provider ? `<p id="provider" class="text-sm text-foreground/70">Logged in with ${provider}</p>` : ''}
