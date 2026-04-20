@@ -63,7 +63,7 @@ export const handle_discord_activity_auth = async (request: IRequest, env: Env) 
             .setExpirationTime("30d")
             .sign(new TextEncoder().encode(env.JWT_SECRET));
 
-        return new Response(JSON.stringify({ token: jwt }), {
+        return new Response(JSON.stringify({ token: jwt, discord_access_token: tokens.access_token }), {
             headers: {
                 "Content-Type": "application/json",
                 "Access-Control-Allow-Origin": "*.discordsays.com",
