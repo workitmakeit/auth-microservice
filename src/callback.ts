@@ -6,7 +6,8 @@ import { validate_origin } from "./util";
 import { IRequest } from "itty-router";
 
 export const handle_callback = async (request: IRequest, env: Env) => {
-    const { provider, code, state } = request.params;
+    const { provider } = request.params;
+    const { code, state } = request.query as { code?: string; state?: string };
 
     const oauth = get_provider(provider, env);
     if (!oauth) {
