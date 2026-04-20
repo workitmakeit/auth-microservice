@@ -6,7 +6,8 @@ import { validate_origin, verify_token } from "./util";
 import { IRequest } from 'itty-router';
 
 export const handle_login = async (request: IRequest, env: Env) => {
-    let { provider, from } = request.params;
+    const { provider } = request.params;
+    let { from } = request.query as { from?: string };
 
     if (!from) {
         from = env.BASE_URL;
