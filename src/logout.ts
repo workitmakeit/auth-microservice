@@ -1,9 +1,14 @@
 import { serialize } from "cookie";
+import type { IRequest } from "itty-router";
 
 import { validate_origin } from "./util";
 
-export const handle_logout = async (request: Request, env: Env) => {
-    const from = new URL(request.url).searchParams.get("from") || env.BASE_URL;
+export const handle_logout = async (request: IRequest, env: Env) => {
+    let { from } = request.query as { from?: string };
+
+    if (!from) {
+        from = env.BASE_URL;
+    }
 
     const target_origin = new URL(from).origin;
     const { is_allowed } = validate_origin(target_origin, env);

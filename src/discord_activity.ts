@@ -1,7 +1,6 @@
 import { SignJWT } from "jose";
 import { get_user_info, provider_friendly_names } from "./providers";
 import type { IRequest } from "itty-router";
-import { validate_origin } from "./util";
 
 export const handle_discord_activity_auth = async (request: IRequest, env: Env) => {
     const { activity } = request.query as { activity?: string };
