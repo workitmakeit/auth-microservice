@@ -7,7 +7,7 @@ import { IRequest } from 'itty-router';
 
 export const handle_login = async (request: IRequest, env: Env) => {
     const { provider } = request.params;
-    let { from } = request.query as { from?: string };
+    let { from, extra_scopes } = request.query as { from?: string; extra_scopes?: string | string[] };
 
     if (!from) {
         from = env.BASE_URL;
@@ -39,10 +39,19 @@ export const handle_login = async (request: IRequest, env: Env) => {
     // if at this point provider is undefined, redirect to base url (which has uri to choose provider)
     // TODO: or should that ui be on /login when provider not specified, and root redirects here (its just for vanity)
     if (!provider) {
-        // be sure to preserve the from param if present
+        // be sure to preserve the from and extra_scopes params if present
         const redirect_url = new URL(env.BASE_URL);
         if (from) {
             redirect_url.searchParams.set("from", from);
+        }
+        if (extra_scopes) {
+            if (Array.isArray(extra_scopes)) {
+                for (const scope of extra_scopes) {
+                    redirect_url.searchParams.append("extra_scopes", scope);
+                }
+            } else {
+                redirect_url.searchParams.set("extra_scopes", extra_scopes);
+            }
         }
 
         return Response.redirect(redirect_url.toString(), 302);
@@ -53,10 +62,18 @@ export const handle_login = async (request: IRequest, env: Env) => {
         return new Response(`Unknown provider: ${provider}`, { status: 400 });
     }
 
+    if (extra_scopes) {
+        if (typeof extra_scopes === "string") {
+            extra_scopes = extra_scopes.split(",").map(s => s.trim()).filter(s => s.length > 0);
+        }
+    } else {
+        extra_scopes = [];
+    }
+
     // instantiate the provider to get the auth url
     const state = generateState();
     const code_verifier = generateCodeVerifier();
-    const url = oauth.createAuthorizationURL(state, code_verifier, get_scopes(provider));
+    const url = oauth.createAuthorizationURL(state, code_verifier, [...get_scopes(provider), ...extra_scopes]);
 
     // store auth state in cookie
     const cookie = serialize("auth_state", JSON.stringify({ state, from, provider, code_verifier }), {
