@@ -14,12 +14,6 @@ import { handle_discord_activity_auth } from "./discord_activity";
 
 export default class AuthService extends WorkerEntrypoint<Env> {
     async fetch(request: Request): Promise<Response> {
-        // check rate limit
-        const {success} = await this.env.AUTH_RATE_LIMIT.limit({key: request.headers.get("CF-Connecting-IP") || "unknown"});
-        if (!success) {
-            return new Response("Too many requests", { status: 429 });
-        }
-
         // note that this is only preflight, the actual CORS headers are set in each handler to allow for dynamic origins
         const { preflight } = cors({
             origin: (origin) => {
@@ -48,14 +42,25 @@ export default class AuthService extends WorkerEntrypoint<Env> {
         });
 
         router
+            // separate rate limiting logic for discord login
+            .post("/login-discord-activity", handle_discord_activity_auth)
+            .all("*", async (request) => {
+                // check rate limit
+                const {success} = await this.env.AUTH_RATE_LIMIT.limit({key: request.headers.get("CF-Connecting-IP") || "unknown"});
+                if (!success) {
+                    return new Response("Too many requests", { status: 429 });
+                }
+
+                // pass through
+                return;
+            })
             .get("/login", handle_login)
             .get("/login/:provider", handle_login)
             .get("/callback/:provider", handle_callback)
             .get("/logout", handle_logout)
             .get("/me", handle_me)
             .get("/providers", handle_provider_names)
-            .get("/", handle_frontend)
-            .post("/login-discord-activity", handle_discord_activity_auth);
+            .get("/", handle_frontend);
 
         return router.fetch(request, this.env, this.ctx);
     }

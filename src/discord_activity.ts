@@ -3,6 +3,13 @@ import { get_user_info, provider_friendly_names } from "./providers";
 import type { IRequest } from "itty-router";
 
 export const handle_discord_activity_auth = async (request: IRequest, env: Env) => {
+    // using a higher limit here since discord proxies all the requests. not much we can do but better than it blocking discord
+    // wish discord would actually publish their ips or let us verify their signature or something
+    const {success} = await env.DISCORD_ACTIVITY_AUTH_RATE_LIMIT.limit({key: request.headers.get("CF-Connecting-IP") || "unknown"});
+    if (!success) {
+        return new Response(JSON.stringify({ error: "Too many requests" }), { status: 429 });
+    }
+
     const origin = request.headers.get("Origin") || "";
     if (!origin.endsWith(".discordsays.com") && origin !== "https://discordsays.com") {
         return new Response(JSON.stringify({ error: "Unauthorised origin" }), { status: 403 });

@@ -52,6 +52,14 @@
                 "limit": 10,
                 "period": 60
             }
+        },
+        {
+            "name": "DISCORD_ACTIVITY_AUTH_RATE_LIMIT",
+            "namespace_id": "67315",
+            "simple": {
+                "limit": 500,
+                "period": 60
+            }
         }
     ]
 	/**
