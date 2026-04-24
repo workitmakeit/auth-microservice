@@ -9,7 +9,8 @@ export const handle_frontend = async (request: IRequest, env: Env) => {
     let extra_scopes = request.query.extra_scopes || [];
 
     // if the from is not allowed, stop here
-    if (!validate_origin(new URL(from).origin, env).is_allowed) {
+    const from_origin = new URL(from).origin;
+    if (!validate_origin(from_origin, env).is_allowed) {
         return new Response("Unauthorised from origin", { status: 403 });
     }
 
@@ -19,6 +20,14 @@ export const handle_frontend = async (request: IRequest, env: Env) => {
 
     let provider: string | null = null;
     let username_with_discrim: string | null = null;
+
+    const sanitise_html = (str?: string | null) => {
+        if (!str) {
+            return "";
+        }
+
+        return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+    }
 
     if (cookies["sso_token"]) {
         const verification = await verify_token(cookies["sso_token"], env);
@@ -101,14 +110,14 @@ export const handle_frontend = async (request: IRequest, env: Env) => {
                         `<div id="providers" class="flex flex-col items-stretch gap-4 mb-2">
                           ${provider_names.map((provider) => {
                                 const friendly_name = provider_friendly_names[provider] || provider;
-                                return `<a target="_parent" href=${build_url_with_params(`/login/${provider}`)} class="link"><img src="https://cdn.simpleicons.org/${provider}/ffffff" class="icon" />Log in with ${friendly_name}</a>`;
+                                return `<a target="_parent" href="${build_url_with_params(`/login/${provider}`)}" class="link"><img src="https://cdn.simpleicons.org/${provider}/ffffff" class="icon" />Log in with ${sanitise_html(friendly_name)}</a>`;
                             }).join("")}
                       </div>
                       Your account is tied to the provider you choose.<br/>Make sure to use the same one each time!`
                     : ''}
 
-                    ${provider ? `<p id="provider" class="text-sm text-foreground/70">Logged in with ${provider}</p>` : ''}
-                    ${show_logout ? `<a id="logout" href=${build_url_with_params("/logout")} class="link">Log out from ${username_with_discrim}</a>` : ''}
+                    ${provider ? `<p id="provider" class="text-sm text-foreground/70">Logged in with ${sanitise_html(provider)}</p>` : ''}
+                    ${show_logout ? `<a id="logout" href="${build_url_with_params("/logout")}" class="link">Log out from ${sanitise_html(username_with_discrim)}</a>` : ''}
                 </div>
             </body>
 
@@ -116,7 +125,7 @@ export const handle_frontend = async (request: IRequest, env: Env) => {
               const send_height = () => {
                   const height = document.documentElement.scrollHeight;
 
-                  window.parent.postMessage({ type: "iframe-resize", height }, "${new URL(from).origin}");
+                  window.parent.postMessage({ type: "iframe-resize", height }, ${JSON.stringify(from_origin)});
               };
 
               const observer = new ResizeObserver(send_height);
@@ -131,8 +140,8 @@ export const handle_frontend = async (request: IRequest, env: Env) => {
                 "Content-Type": "text/html",
 
                 // allow iframing only in the authorised origin
-                "Content-Security-Policy": `frame-ancestors ${from};`,
-                "X-Frame-Options": `ALLOW-FROM ${from}`
+                "Content-Security-Policy": `frame-ancestors ${from_origin};`,
+                "X-Frame-Options": `ALLOW-FROM ${from_origin}`
             }
         }
     );
