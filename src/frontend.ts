@@ -9,7 +9,8 @@ export const handle_frontend = async (request: IRequest, env: Env) => {
     let extra_scopes = request.query.extra_scopes || [];
 
     // if the from is not allowed, stop here
-    if (!validate_origin(new URL(from).origin, env).is_allowed) {
+    const from_origin = new URL(from).origin;
+    if (!validate_origin(from_origin, env).is_allowed) {
         return new Response("Unauthorised from origin", { status: 403 });
     }
 
@@ -131,8 +132,8 @@ export const handle_frontend = async (request: IRequest, env: Env) => {
                 "Content-Type": "text/html",
 
                 // allow iframing only in the authorised origin
-                "Content-Security-Policy": `frame-ancestors ${from};`,
-                "X-Frame-Options": `ALLOW-FROM ${from}`
+                "Content-Security-Policy": `frame-ancestors ${from_origin};`,
+                "X-Frame-Options": `ALLOW-FROM ${from_origin}`
             }
         }
     );

@@ -49,3 +49,5 @@ export const handle_me = async (request: Request, env: Env) => {
         });
     }
 };
+
+// TODO: this is unnecessary without the D1 backing store, as its just reading the public jwt data

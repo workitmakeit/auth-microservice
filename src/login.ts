@@ -22,16 +22,10 @@ export const handle_login = async (request: IRequest, env: Env) => {
 
         // if the session is valid and either we don't care about provider or it matches
         if (session.valid && (!provider || session.payload.sub?.startsWith(provider))) {
-            const { is_allowed, pass_token_via_url } = validate_origin(new URL(from).origin, env);
+            const { is_allowed } = validate_origin(new URL(from).origin, env);
 
             if (is_allowed) {
-                const redirect_url = new URL(from);
-
-                if (pass_token_via_url) {
-                    redirect_url.searchParams.set("token", existing_token);
-                }
-
-                return Response.redirect(redirect_url.toString(), 302);
+                return Response.redirect(from, 302);
             }
         }
     }

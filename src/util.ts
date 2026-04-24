@@ -5,7 +5,7 @@ export const validate_origin = (target_origin: string, env: Env) => {
     if (target_origin === new URL(env.BASE_URL).origin) {
         return {
             is_allowed: true,
-            pass_token_via_url: false
+            pass_token_via_frame: false
         };
     }
 
@@ -21,7 +21,7 @@ export const validate_origin = (target_origin: string, env: Env) => {
 
     // check if allowed, by either being an exact match or a subdomain if wildcarding is enabled
     // or is in the EXTRA_REDIRECT_ORIGINS list in env
-    let pass_token_via_url = false;
+    let pass_token_via_frame = false;
     let is_allowed = false;
     if (target_origin === cookie_origin) {
         is_allowed = true;
@@ -29,12 +29,12 @@ export const validate_origin = (target_origin: string, env: Env) => {
         is_allowed = true;
     } else if (env.EXTRA_REDIRECT_ORIGINS.split(",").map(s => s.trim()).includes(target_origin)) {
         is_allowed = true;
-        pass_token_via_url = true;
+        pass_token_via_frame = true;
     }
 
     return {
         is_allowed,
-        pass_token_via_url
+        pass_token_via_frame
     }
 }
 
