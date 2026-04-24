@@ -3,6 +3,11 @@ import { get_user_info, provider_friendly_names } from "./providers";
 import type { IRequest } from "itty-router";
 
 export const handle_discord_activity_auth = async (request: IRequest, env: Env) => {
+    const origin = request.headers.get("Origin") || "";
+    if (!origin.endsWith(".discordsays.com") && origin !== "https://discordsays.com") {
+        return new Response(JSON.stringify({ error: "Unauthorised origin" }), { status: 403 });
+    }
+
     const { activity } = request.query as { activity?: string };
 
     if (!activity) {
@@ -65,7 +70,7 @@ export const handle_discord_activity_auth = async (request: IRequest, env: Env) 
         return new Response(JSON.stringify({ token: jwt, discord_access_token: tokens.access_token }), {
             headers: {
                 "Content-Type": "application/json",
-                "Access-Control-Allow-Origin": "*.discordsays.com",
+                "Access-Control-Allow-Origin": origin,
             }
         });
     } catch (e) {
