@@ -43,7 +43,17 @@
 		"BASE_URL": "https://auth.ollieg.codes",
 		"COOKIE_DOMAIN": ".ollieg.codes",
 		"EXTRA_REDIRECT_ORIGINS": "https://rangle.today"
-	}
+	},
+    "ratelimits": [
+        {
+            "name": "AUTH_RATE_LIMIT",
+            "namespace_id": "67314",
+            "simple": {
+                "limit": 10,
+                "period": 60
+            }
+        }
+    ]
 	/**
 	 * Static Assets
 	 * https://developers.cloudflare.com/workers/static-assets/binding/

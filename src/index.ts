@@ -14,6 +14,12 @@ import { handle_discord_activity_auth } from "./discord_activity";
 
 export default class AuthService extends WorkerEntrypoint<Env> {
     async fetch(request: Request): Promise<Response> {
+        // check rate limit
+        const {success} = await this.env.AUTH_RATE_LIMIT.limit({key: request.headers.get("CF-Connecting-IP") || "unknown"});
+        if (!success) {
+            return new Response("Too many requests", { status: 429 });
+        }
+
         // note that this is only preflight, the actual CORS headers are set in each handler to allow for dynamic origins
         const { preflight } = cors({
             origin: (origin) => {
