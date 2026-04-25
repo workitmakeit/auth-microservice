@@ -4,7 +4,7 @@ import { AutoRouter, cors } from "itty-router";
 
 import { handle_login } from "./login";
 import { handle_callback } from "./callback";
-import { handle_frontend } from "./frontend";
+import { handle_frontend, handle_local_interstitial } from './frontend';
 import { handle_logout } from "./logout";
 import { handle_me } from "./me";
 
@@ -60,7 +60,8 @@ export default class AuthService extends WorkerEntrypoint<Env> {
             .get("/logout", handle_logout)
             .get("/me", handle_me)
             .get("/providers", handle_provider_names)
-            .get("/", handle_frontend);
+            .get("/", handle_frontend)
+            .get("/local", handle_local_interstitial);
 
         return router.fetch(request, this.env, this.ctx);
     }

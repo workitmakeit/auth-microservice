@@ -4,6 +4,14 @@ import { parseCookie } from "cookie";
 import { validate_origin, verify_token } from "./util";
 import { provider_names, provider_friendly_names } from "./providers";
 
+const sanitise_html = (str?: string | null) => {
+    if (!str) {
+        return "";
+    }
+
+    return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+}
+
 export const handle_frontend = async (request: IRequest, env: Env) => {
     const from = (request.query.from as string) || env.BASE_URL;
     let extra_scopes = request.query.extra_scopes || [];
@@ -20,14 +28,6 @@ export const handle_frontend = async (request: IRequest, env: Env) => {
 
     let provider: string | null = null;
     let username_with_discrim: string | null = null;
-
-    const sanitise_html = (str?: string | null) => {
-        if (!str) {
-            return "";
-        }
-
-        return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-    }
 
     if (cookies["sso_token"]) {
         const verification = await verify_token(cookies["sso_token"], env);
@@ -56,7 +56,7 @@ export const handle_frontend = async (request: IRequest, env: Env) => {
         if (extra_scopes) {
             url.searchParams.set("extra_scopes", extra_scopes);
         }
-        return url.toString();
+        return sanitise_html(url.toString());
     }
 
     return new Response(`
@@ -133,6 +133,74 @@ export const handle_frontend = async (request: IRequest, env: Env) => {
 
               window.addEventListener("load", send_height);
             </script>
+        </html>
+    `,
+        {
+            headers: {
+                "Content-Type": "text/html",
+
+                // allow iframing only in the authorised origin
+                "Content-Security-Policy": `frame-ancestors ${from_origin};`,
+                "X-Frame-Options": `ALLOW-FROM ${from_origin}`
+            }
+        }
+    );
+}
+
+export const handle_local_interstitial = async (request: IRequest, env: Env) => {
+    const from = (request.query.from as string) || env.BASE_URL;
+
+    // if the from is not allowed, stop here
+    const parsed_from = new URL(from);
+    const from_origin = parsed_from.origin;
+    if (!validate_origin(from_origin, env).is_allowed) {
+        return new Response("Unauthorised from origin", { status: 403 });
+    }
+
+    // fetch the sso token cookie
+    const cookies = parseCookie(request.headers.get("Cookie") || "");
+    const sso_token = cookies["sso_token"];
+
+    // if no token, just redirect to from, something has gone wrong
+    if (!sso_token) {
+        return Response.redirect(from, 302);
+    }
+
+    // add the token to the from url
+    parsed_from.searchParams.set("token", sso_token);
+
+    return new Response(`
+        <html>
+            <head>
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <style>
+                  body {
+                      font-family: system-ui, sans-serif;
+                      background-color: #111111;
+                      color: #cecece;
+                      display: flex;
+                      flex-direction: column;
+                      align-items: center;
+                      justify-content: center;
+                      height: 100vh;
+                      text-align: center;
+                      padding: 2rem;
+                  }
+
+                  a {
+                      color: #5865f2;
+                      text-decoration: none;
+                      font-weight: bold;
+                      margin-top: 1rem;
+                  }
+              </style>
+            </head>
+            <body>
+                <h1>ollieg.codes Account</h1>
+                <p>A local application on your computer wants to access your account. If you are aware of such an application and trust it, you can safely click the button below to proceed.</p>
+                <p>If you don't trust the application or weren't expecting this, close the page immediately, and consider running a malware scan on your computer.</p>
+                <a href="${sanitise_html(parsed_from.toString())}" target="_parent">Confirm</a>
+            </body>
         </html>
     `,
         {

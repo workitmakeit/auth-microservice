@@ -1,11 +1,18 @@
 import { JWTPayload, jwtVerify } from "jose";
 
-export const validate_origin = (target_origin: string, env: Env) => {
+interface OriginValidationResult {
+    is_allowed: boolean;
+    pass_token_via_url: boolean;
+    show_local_warning: boolean;
+}
+
+export const validate_origin = (target_origin: string, env: Env): OriginValidationResult => {
     // base url is always allowed
     if (target_origin === new URL(env.BASE_URL).origin) {
         return {
             is_allowed: true,
-            pass_token_via_url: false
+            pass_token_via_url: false,
+            show_local_warning: false
         };
     }
 
@@ -19,11 +26,18 @@ export const validate_origin = (target_origin: string, env: Env) => {
         cookie_origin = `https://${env.COOKIE_DOMAIN}`;
     }
 
-    // check if allowed, by either being an exact match or a subdomain if wildcarding is enabled
-    // or is in the EXTRA_REDIRECT_ORIGINS list in env
     let pass_token_via_url = false;
     let is_allowed = false;
-    if (target_origin === cookie_origin) {
+    let show_local_warning = false;
+
+    // check for localhost or 127 domains (local programs) and serve a warning
+    // check if allowed, by either being an exact match or a subdomain if wildcarding is enabled
+    // or is in the EXTRA_REDIRECT_ORIGINS list in env
+    const parsed = new URL(target_origin);
+    if (parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1") {
+        is_allowed = true;
+        show_local_warning = true;
+    } else if (target_origin === cookie_origin) {
         is_allowed = true;
     } else if (is_wildcard && target_origin.endsWith(`.${cookie_origin.substring(8)}`)) {
         is_allowed = true;
@@ -34,7 +48,8 @@ export const validate_origin = (target_origin: string, env: Env) => {
 
     return {
         is_allowed,
-        pass_token_via_url
+        pass_token_via_url,
+        show_local_warning
     }
 }
 

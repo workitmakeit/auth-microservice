@@ -54,11 +54,16 @@ export const handle_callback = async (request: IRequest, env: Env) => {
 
         // only redirect to authorised origins
         const target_origin = new URL(state_data.from || env.BASE_URL).origin;
-        const { is_allowed, pass_token_via_url } = validate_origin(target_origin, env);
+        const { is_allowed, pass_token_via_url, show_local_warning } = validate_origin(target_origin, env);
 
         const final_redirect = is_allowed ? state_data.from : env.BASE_URL;
 
-        const redirect_url = new URL(final_redirect);
+        const redirect_url = new URL(show_local_warning ? `${env.BASE_URL}/local` : final_redirect);
+
+        // if we're showing the local warning, we need to pass the original target as well
+        if (show_local_warning) {
+            redirect_url.searchParams.set("from", final_redirect);
+        }
 
         if (pass_token_via_url) {
             redirect_url.searchParams.set("token", jwt);

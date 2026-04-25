@@ -3,7 +3,7 @@ import { parseCookie, serialize } from "cookie";
 
 import { get_provider, get_scopes } from "./providers";
 import { validate_origin, verify_token } from "./util";
-import { IRequest } from 'itty-router';
+import { IRequest } from "itty-router";
 
 export const handle_login = async (request: IRequest, env: Env) => {
     const { provider } = request.params;
@@ -22,10 +22,15 @@ export const handle_login = async (request: IRequest, env: Env) => {
 
         // if the session is valid and either we don't care about provider or it matches
         if (session.valid && (!provider || session.payload.sub?.startsWith(provider))) {
-            const { is_allowed, pass_token_via_url } = validate_origin(new URL(from).origin, env);
+            const { is_allowed, pass_token_via_url, show_local_warning } = validate_origin(new URL(from).origin, env);
 
             if (is_allowed) {
-                const redirect_url = new URL(from);
+                const redirect_url = new URL(show_local_warning ? `${env.BASE_URL}/local` : from);
+
+                // if we're showing the local warning, we need to pass the original target as well
+                if (show_local_warning) {
+                    redirect_url.searchParams.set("from", from);
+                }
 
                 if (pass_token_via_url) {
                     redirect_url.searchParams.set("token", existing_token);
