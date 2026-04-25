@@ -64,7 +64,7 @@ export const get_user_info = async (provider: string, access_token: string): Pro
                 username: data.username,
                 discriminator: data.discriminator,
                 email: data.email,
-                avatar: `https://cdn.discordapp.com/avatars/${data.id}/${data.avatar}.png`
+                avatar: data.avatar ? `https://cdn.discordapp.com/avatars/${data.id}/${data.avatar}.png` : undefined
             };
         }
         case "google": {
